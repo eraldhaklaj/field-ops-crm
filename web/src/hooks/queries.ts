@@ -21,8 +21,9 @@ export function useProfile(userId: string | undefined) {
   });
 }
 
-// A stable secondary sort on id keeps rows from jumping when one is updated
-// (the seed rows share a created_at, so created_at alone is ambiguous).
+// Sort by value (biggest opportunities first), with id as a stable tiebreaker.
+// Both are immutable, so marking a lead won/lost or assigning it never moves the
+// row (unlike created_at, which is identical across the seed rows).
 export function useLeads(orgId?: string) {
   return useQuery({
     queryKey: ["leads", orgId ?? "scope"],
@@ -30,7 +31,7 @@ export function useLeads(orgId?: string) {
       let q = supabase
         .from("leads")
         .select(LEAD_SELECT)
-        .order("created_at", { ascending: true })
+        .order("value_cents", { ascending: false })
         .order("id", { ascending: true });
       if (orgId) q = q.eq("org_id", orgId);
       const { data, error } = await q;
