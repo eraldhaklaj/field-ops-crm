@@ -1,5 +1,6 @@
 import { useLeads, useOrgReps } from "@/hooks/queries";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { LeadsTable } from "@/components/LeadsTable";
 import { NewLeadDialog } from "@/components/NewLeadDialog";
 import { formatMoney } from "@/lib/utils";
@@ -88,13 +89,17 @@ function Stat({
 
 function SkeletonRows() {
   return (
-    <Card className="divide-y divide-slate-50">
-      {[0, 1, 2, 3].map((i) => (
+    <Card className="divide-y divide-slate-50 overflow-hidden">
+      {[0, 1, 2, 3, 4].map((i) => (
         <div key={i} className="flex items-center gap-4 px-5 py-3.5">
-          <div className="h-4 w-44 animate-pulse rounded bg-slate-100" />
-          <div className="h-4 w-16 animate-pulse rounded bg-slate-100" />
-          <div className="h-5 w-16 animate-pulse rounded-full bg-slate-100" />
-          <div className="ml-auto h-4 w-20 animate-pulse rounded bg-slate-100" />
+          <div className="flex flex-1 flex-col gap-1.5">
+            <Skeleton className="h-3.5 w-44" />
+            <Skeleton className="h-2.5 w-24" />
+          </div>
+          <Skeleton className="h-5 w-16 rounded-full" />
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-6 w-14 rounded-lg" />
         </div>
       ))}
     </Card>

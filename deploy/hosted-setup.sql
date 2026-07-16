@@ -118,10 +118,10 @@ create policy "leads read own org or superadmin"
   on public.leads for select to authenticated
   using ( org_id = public.auth_org_id() or public.is_superadmin() );
 
--- Insert only into your own org.
+-- Insert into your own org; a superadmin may insert into any tenant.
 create policy "leads insert into own org"
   on public.leads for insert to authenticated
-  with check ( org_id = public.auth_org_id() );
+  with check ( org_id = public.auth_org_id() or public.is_superadmin() );
 
 -- Update only within your own org (superadmin anywhere).
 create policy "leads update own org or superadmin"

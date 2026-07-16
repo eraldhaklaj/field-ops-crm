@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useRollup } from "@/hooks/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/utils";
@@ -40,7 +41,12 @@ export function ControlPlane({ profile, orgs }: { profile: Profile; orgs: Org[] 
       {rollup.isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[0, 1, 2].map((i) => (
-            <Card key={i} className="h-44 animate-pulse bg-slate-50/60" />
+            <Card key={i} className="flex flex-col gap-4 p-5">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-7 w-24" />
+              <Skeleton className="h-1.5 w-full rounded-full" />
+              <Skeleton className="h-8 w-full rounded-lg" />
+            </Card>
           ))}
         </div>
       ) : rollup.isError ? (

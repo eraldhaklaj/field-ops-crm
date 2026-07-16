@@ -6,6 +6,7 @@ import { Login } from "@/components/Login";
 import { Header, type View } from "@/components/Header";
 import { LeadsView } from "@/components/LeadsView";
 import { ControlPlane } from "@/components/ControlPlane";
+import { AppSkeleton } from "@/components/AppSkeleton";
 
 export default function App() {
   const { session, loading } = useSession();
@@ -16,7 +17,7 @@ export default function App() {
 
   if (loading) return <Splash />;
   if (!session) return <Login />;
-  if (profile.isLoading) return <Splash />;
+  if (profile.isLoading) return <AppSkeleton />;
 
   const p = profile.data;
   if (profile.isError || !p) {
