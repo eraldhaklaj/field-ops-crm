@@ -1,0 +1,20 @@
+# deps
+node_modules/
+web/node_modules/
+
+# build output
+web/dist/
+dist/
+
+# env / secrets (never commit real keys)
+.env
+.env.*
+!.env.example
+
+# supabase local runtime
+supabase/.temp/
+supabase/.branches/
+
+# misc
+.DS_Store
+*.log
