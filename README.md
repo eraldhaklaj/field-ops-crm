@@ -1,5 +1,7 @@
 # Field-sales CRM slice — multi-tenant, Supabase, built with Claude Code
 
+**Live demo:** https://eraldhaklaj.github.io/field-ops-crm/ (sign in with a one-click demo account)
+
 A small but fully working slice of a multi-tenant field-sales / home-services CRM,
 plus a super-admin control plane. Every layer is wired end to end and verified against
 a live stack, nothing is mocked.
