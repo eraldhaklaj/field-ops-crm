@@ -2,7 +2,8 @@ import { useLeads, useOrgReps } from "@/hooks/queries";
 import { Card } from "@/components/ui/card";
 import { LeadsTable } from "@/components/LeadsTable";
 import { NewLeadDialog } from "@/components/NewLeadDialog";
-import type { Org, Profile } from "@/lib/types";
+import { formatMoney } from "@/lib/utils";
+import type { Lead, Org, Profile } from "@/lib/types";
 
 export function LeadsView({
   profile,
@@ -17,26 +18,29 @@ export function LeadsView({
   const reps = useOrgReps(orgId);
   const canManage = profile.role === "admin" || profile.role === "superadmin";
   const orgNameById = Object.fromEntries((orgs ?? []).map((o) => [o.id, o.name]));
+  const rows = leads.data ?? [];
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Leads</h2>
+          <h2 className="text-lg font-semibold tracking-tight text-slate-900">Leads</h2>
           <p className="text-sm text-slate-500">
-            {orgId ? "Your pipeline" : "All tenants (superadmin view)"}
+            {orgId ? "Your pipeline" : "Every tenant, superadmin view"}
           </p>
         </div>
         {orgId && canManage && <NewLeadDialog orgId={orgId} />}
       </div>
 
+      {!leads.isLoading && !leads.isError && rows.length > 0 && <SummaryStrip leads={rows} />}
+
       {leads.isLoading ? (
         <SkeletonRows />
       ) : leads.isError ? (
-        <Card className="p-6 text-sm text-red-600">{(leads.error as Error).message}</Card>
+        <Card className="p-6 text-sm text-rose-600">{(leads.error as Error).message}</Card>
       ) : (
         <LeadsTable
-          leads={leads.data ?? []}
+          leads={rows}
           reps={reps.data ?? []}
           canAssign={canManage && !!orgId}
           showOrg={!orgId}
@@ -47,14 +51,50 @@ export function LeadsView({
   );
 }
 
+function SummaryStrip({ leads }: { leads: Lead[] }) {
+  const open = leads.filter((l) => l.status === "new" || l.status === "assigned");
+  const openValue = open.reduce((sum, l) => sum + l.value_cents, 0);
+  const won = leads.filter((l) => l.status === "won").length;
+  const stale = leads.filter((l) => l.is_stale).length;
+
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <Stat label="Total leads" value={String(leads.length)} />
+      <Stat label="Open pipeline" value={formatMoney(openValue)} />
+      <Stat label="Won" value={String(won)} accent="green" />
+      <Stat label="Stale" value={String(stale)} accent={stale > 0 ? "red" : undefined} />
+    </div>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: "green" | "red";
+}) {
+  const color =
+    accent === "green" ? "text-emerald-600" : accent === "red" ? "text-rose-600" : "text-slate-900";
+  return (
+    <Card className="px-4 py-3">
+      <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">{label}</div>
+      <div className={`mt-1 text-xl font-semibold tabular-nums tracking-tight ${color}`}>{value}</div>
+    </Card>
+  );
+}
+
 function SkeletonRows() {
   return (
-    <Card className="divide-y divide-slate-100">
-      {[0, 1, 2].map((i) => (
-        <div key={i} className="flex items-center gap-4 p-4">
-          <div className="h-4 w-40 animate-pulse rounded bg-slate-100" />
-          <div className="h-4 w-20 animate-pulse rounded bg-slate-100" />
-          <div className="ml-auto h-4 w-24 animate-pulse rounded bg-slate-100" />
+    <Card className="divide-y divide-slate-50">
+      {[0, 1, 2, 3].map((i) => (
+        <div key={i} className="flex items-center gap-4 px-5 py-3.5">
+          <div className="h-4 w-44 animate-pulse rounded bg-slate-100" />
+          <div className="h-4 w-16 animate-pulse rounded bg-slate-100" />
+          <div className="h-5 w-16 animate-pulse rounded-full bg-slate-100" />
+          <div className="ml-auto h-4 w-20 animate-pulse rounded bg-slate-100" />
         </div>
       ))}
     </Card>

@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import type { Lead, LeadStatus, Org, OrgRollup, Profile, ServiceType } from "@/lib/types";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const LEAD_SELECT = "*, assignee:profiles!leads_assigned_to_fkey(full_name)";
 
 export function useProfile(userId: string | undefined) {
   return useQuery({
@@ -20,17 +21,21 @@ export function useProfile(userId: string | undefined) {
   });
 }
 
-// orgId undefined -> RLS returns whatever the caller may see (their org, or all
-// orgs for a superadmin). orgId set -> a specific tenant (superadmin drilldown).
+// A stable secondary sort on id keeps rows from jumping when one is updated
+// (the seed rows share a created_at, so created_at alone is ambiguous).
 export function useLeads(orgId?: string) {
   return useQuery({
     queryKey: ["leads", orgId ?? "scope"],
     queryFn: async (): Promise<Lead[]> => {
-      let q = supabase.from("leads").select("*").order("created_at", { ascending: true });
+      let q = supabase
+        .from("leads")
+        .select(LEAD_SELECT)
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true });
       if (orgId) q = q.eq("org_id", orgId);
       const { data, error } = await q;
       if (error) throw error;
-      return data as Lead[];
+      return data as unknown as Lead[];
     },
   });
 }
@@ -107,19 +112,22 @@ export function useCreateLead() {
   });
 }
 
-export function useAssignLead() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (vars: { leadId: string; repId: string }): Promise<Lead> => {
-      const { data, error } = await supabase.rpc("assign_lead", {
-        p_lead_id: vars.leadId,
-        p_rep_id: vars.repId,
-      });
-      if (error) throw error;
-      return data as Lead;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["leads"] }),
-  });
+// Patch every cached leads list in place, so a row updates without the list
+// re-fetching and reordering under the user.
+function patchLeadInCaches(
+  qc: ReturnType<typeof useQueryClient>,
+  leadId: string,
+  patch: Partial<Lead>,
+) {
+  const snapshots = qc.getQueriesData<Lead[]>({ queryKey: ["leads"] });
+  for (const [key, data] of snapshots) {
+    if (!data) continue;
+    qc.setQueryData<Lead[]>(
+      key,
+      data.map((l) => (l.id === leadId ? { ...l, ...patch } : l)),
+    );
+  }
+  return snapshots;
 }
 
 export function useUpdateLeadStatus() {
@@ -135,6 +143,56 @@ export function useUpdateLeadStatus() {
       if (error) throw error;
       return data as Lead;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["leads"] }),
+    onMutate: async (vars) => {
+      await qc.cancelQueries({ queryKey: ["leads"] });
+      return { snapshots: patchLeadInCaches(qc, vars.leadId, { status: vars.status }) };
+    },
+    onError: (_e, _v, ctx) => {
+      ctx?.snapshots?.forEach(([key, data]) => qc.setQueryData(key, data));
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["leads"] }),
+  });
+}
+
+export function useAssignLead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: {
+      leadId: string;
+      repId: string;
+      repName: string;
+    }): Promise<Lead> => {
+      const { data, error } = await supabase.rpc("assign_lead", {
+        p_lead_id: vars.leadId,
+        p_rep_id: vars.repId,
+      });
+      if (error) throw error;
+      return data as Lead;
+    },
+    onMutate: async (vars) => {
+      await qc.cancelQueries({ queryKey: ["leads"] });
+      const snapshots = qc.getQueriesData<Lead[]>({ queryKey: ["leads"] });
+      for (const [key, data] of snapshots) {
+        if (!data) continue;
+        qc.setQueryData<Lead[]>(
+          key,
+          data.map((l) =>
+            l.id === vars.leadId
+              ? {
+                  ...l,
+                  assigned_to: vars.repId,
+                  assignee: { full_name: vars.repName },
+                  status: l.status === "new" ? "assigned" : l.status,
+                }
+              : l,
+          ),
+        );
+      }
+      return { snapshots };
+    },
+    onError: (_e, _v, ctx) => {
+      ctx?.snapshots?.forEach(([key, data]) => qc.setQueryData(key, data));
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["leads"] }),
   });
 }

@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import { useSession } from "@/hooks/useSession";
 import { useOrgs, useProfile } from "@/hooks/queries";
 import { Login } from "@/components/Login";
@@ -13,12 +14,14 @@ export default function App() {
   const orgs = useOrgs(!!profile.data);
   const [view, setView] = useState<View>("leads");
 
-  if (loading) return <FullScreen>Loading…</FullScreen>;
+  if (loading) return <Splash />;
   if (!session) return <Login />;
-  if (profile.isLoading) return <FullScreen>Loading your profile…</FullScreen>;
+  if (profile.isLoading) return <Splash />;
 
   const p = profile.data;
-  if (profile.isError || !p) return <FullScreen>Could not load your profile.</FullScreen>;
+  if (profile.isError || !p) {
+    return <Centered>Could not load your profile.</Centered>;
+  }
 
   const isSuper = p.role === "superadmin";
   const orgList = orgs.data ?? [];
@@ -27,7 +30,7 @@ export default function App() {
   return (
     <div className="min-h-full">
       <Header profile={p} orgName={orgName} view={view} onView={setView} />
-      <main className="mx-auto max-w-6xl px-6 py-6">
+      <main className="mx-auto max-w-6xl px-4 py-7 sm:px-6">
         {isSuper && view === "control" ? (
           <ControlPlane profile={p} orgs={orgList} />
         ) : isSuper ? (
@@ -40,8 +43,18 @@ export default function App() {
   );
 }
 
-function FullScreen({ children }: { children: ReactNode }) {
+function Splash() {
   return (
-    <div className="flex min-h-full items-center justify-center text-sm text-slate-500">{children}</div>
+    <div className="flex min-h-full items-center justify-center">
+      <Loader2 className="h-5 w-5 animate-spin text-brand-500" />
+    </div>
+  );
+}
+
+function Centered({ children }: { children: string }) {
+  return (
+    <div className="flex min-h-full items-center justify-center text-sm text-slate-500">
+      {children}
+    </div>
   );
 }

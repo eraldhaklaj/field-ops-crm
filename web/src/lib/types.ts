@@ -36,6 +36,8 @@ export interface Lead {
   sla_due_at: string | null;
   is_stale: boolean;
   created_at: string;
+  // Embedded from profiles via the assigned_to FK (name only).
+  assignee?: { full_name: string } | null;
 }
 
 export interface OrgRollup {

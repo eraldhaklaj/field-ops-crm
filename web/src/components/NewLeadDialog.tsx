@@ -3,6 +3,7 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -61,13 +62,18 @@ export function NewLeadDialog({ orgId }: { orgId: string }) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>New lead</DialogTitle>
+          <DialogDescription>Add a lead to this tenant's pipeline.</DialogDescription>
         </DialogHeader>
-        <form className="flex flex-col gap-3" onSubmit={submit}>
+        <form className="flex flex-col gap-4" onSubmit={submit}>
           <Field label="Customer name">
-            <Input value={name} onChange={(e) => setName(e.target.value)} required />
+            <Input value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
           </Field>
           <Field label="Address">
-            <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="optional" />
+            <Input
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="Optional"
+            />
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Service">
@@ -95,15 +101,19 @@ export function NewLeadDialog({ orgId }: { orgId: string }) {
               />
             </Field>
           </div>
-          {create.isError && <p className="text-sm text-red-600">{(create.error as Error).message}</p>}
-          <div className="mt-2 flex justify-end gap-2">
+          {create.isError && (
+            <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-600 ring-1 ring-inset ring-rose-100">
+              {(create.error as Error).message}
+            </p>
+          )}
+          <div className="mt-1 flex justify-end gap-2">
             <DialogClose asChild>
               <Button type="button" variant="outline">
                 Cancel
               </Button>
             </DialogClose>
             <Button type="submit" disabled={create.isPending}>
-              {create.isPending ? "Saving..." : "Create lead"}
+              {create.isPending ? "Saving…" : "Create lead"}
             </Button>
           </div>
         </form>

@@ -1,19 +1,63 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-50: #eef4ff;
-  --color-brand-100: #d9e6ff;
-  --color-brand-500: #2f6bff;
-  --color-brand-600: #1f54e0;
-  --color-brand-700: #1a45b8;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-300: #a5b4fc;
+  --color-brand-400: #818cf8;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+
+  --shadow-card: 0 1px 2px 0 rgb(16 24 40 / 0.04), 0 1px 3px 0 rgb(16 24 40 / 0.05);
+  --shadow-pop: 0 12px 32px -10px rgb(16 24 40 / 0.20), 0 4px 10px -4px rgb(16 24 40 / 0.10);
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
 }
+
 body {
   margin: 0;
-  background: #f6f7f9;
+  font-family: var(--font-sans);
   color: #0f172a;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background:
+    radial-gradient(1100px 560px at 100% -8%, #eef2ff 0%, rgba(238, 242, 255, 0) 55%),
+    linear-gradient(#fbfbfd, #f3f4f7);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+::selection {
+  background: #c7d2fe;
+  color: #1e1b4b;
+}
+
+/* refined thin scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+*::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+  background-clip: content-box;
 }
